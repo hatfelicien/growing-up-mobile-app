@@ -37,7 +37,7 @@ export default function HomeScreen({ navigation }) {
           <ActivityIndicator size="large" color={colors.primary} />
         ) : (
           modules.map(module => (
-            <TouchableOpacity key={module.id} style={styles.card}>
+            <TouchableOpacity key={module.id} style={styles.card} onPress={() => navigation.navigate('Module', { moduleId: module.id })}>
               <View style={styles.iconContainer}>
                 <Text style={styles.icon}>
                   {module.icon === 'Sparkles' ? '✨' : module.icon === 'Droplet' ? '💧' : module.icon === 'Shield' ? '🛡️' : '😊'}
