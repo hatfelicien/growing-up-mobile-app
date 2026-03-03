@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity, Linking, Image } from 'react-native';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
 
@@ -23,44 +22,6 @@ export default function LessonScreen({ route }) {
 
   if (!lesson) return <View style={styles.container}><Text style={styles.loading}>Loading...</Text></View>;
 
-  const videoHtml = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <style>
-          * { margin: 0; padding: 0; }
-          body { background: #000; }
-          .video-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%;
-            height: 0;
-            overflow: hidden;
-          }
-          .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="video-container">
-          <iframe 
-            src="https://www.youtube.com/embed/${lesson.videoId}?playsinline=1&modestbranding=1&rel=0"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen
-          ></iframe>
-        </div>
-      </body>
-    </html>
-  `;
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -69,19 +30,25 @@ export default function LessonScreen({ route }) {
       </View>
 
       {lesson.type === 'youtube' && lesson.videoId && (
-        <View style={styles.videoWrapper}>
-          <WebView
-            source={{ html: videoHtml }}
-            style={styles.video}
-            allowsFullscreenVideo={true}
-            allowsInlineMediaPlayback={true}
-            mediaPlaybackRequiresUserAction={false}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-            scrollEnabled={false}
-            bounces={false}
+        <TouchableOpacity 
+          style={styles.videoWrapper}
+          onPress={() => Linking.openURL(`vnd.youtube://${lesson.videoId}`).catch(() => 
+            Linking.openURL(`https://www.youtube.com/watch?v=${lesson.videoId}`)
+          )}
+          activeOpacity={0.9}
+        >
+          <Image 
+            source={{ uri: `https://img.youtube.com/vi/${lesson.videoId}/maxresdefault.jpg` }}
+            style={styles.thumbnail}
+            resizeMode="cover"
           />
-        </View>
+          <View style={styles.playOverlay}>
+            <View style={styles.playButton}>
+              <Text style={styles.playIcon}>▶</Text>
+            </View>
+            <Text style={styles.playText}>Tap to watch video</Text>
+          </View>
+        </TouchableOpacity>
       )}
 
       <View style={styles.card}>
@@ -97,8 +64,12 @@ const styles = StyleSheet.create({
   header: { padding: 20 },
   badge: { backgroundColor: colors.primaryLight, color: colors.textInverse, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, fontSize: 12, fontWeight: '600', alignSelf: 'flex-start', marginBottom: 8 },
   title: { fontSize: 24, fontWeight: '700', color: colors.primaryDark },
-  videoWrapper: { width: width, height: width * 0.5625, backgroundColor: '#000', marginBottom: 20 },
-  video: { flex: 1, backgroundColor: 'transparent' },
+  videoWrapper: { width: width, height: width * 0.5625, backgroundColor: '#000', marginBottom: 20, position: 'relative' },
+  thumbnail: { width: '100%', height: '100%' },
+  playOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  playButton: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#FF0000', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  playIcon: { color: '#FFFFFF', fontSize: 32, marginLeft: 6 },
+  playText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600', textShadowColor: 'rgba(0,0,0,0.75)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   card: { marginHorizontal: 20, marginBottom: 20, backgroundColor: colors.surface, borderRadius: 12, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
   content: { fontSize: 16, color: colors.textMain, lineHeight: 24 },
 });
