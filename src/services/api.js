@@ -90,5 +90,75 @@ export const api = {
     } catch (e) {
       return { modules: 0, lessons: 0, users: 0 };
     }
+  },
+
+  markLessonComplete: async (userId, moduleId, lessonId) => {
+    const { error } = await supabase
+      .from('user_progress')
+      .upsert({
+        user_id: userId,
+        module_id: moduleId,
+        lesson_id: lessonId,
+        completed: true,
+        completed_at: new Date().toISOString()
+      });
+    return error ? { success: false } : { success: true };
+  },
+
+  getUserProgress: async (userId) => {
+    const { data, error } = await supabase
+      .from('user_progress')
+      .select('*')
+      .eq('user_id', userId);
+    return error ? [] : data;
+  },
+
+  saveQuizScore: async (userId, moduleId, score, totalQuestions) => {
+    const { error } = await supabase
+      .from('user_quiz_scores')
+      .insert({
+        user_id: userId,
+        module_id: moduleId,
+        score,
+        total_questions: totalQuestions
+      });
+    return error ? { success: false } : { success: true };
+  },
+
+  getUserQuizScores: async (userId) => {
+    const { data, error } = await supabase
+      .from('user_quiz_scores')
+      .select('*')
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false });
+    return error ? [] : data;
+  },
+
+  submitFeedback: async (moduleId, lessonId, comment) => {
+    try {
+      const { error } = await supabase
+        .from('lesson_feedback')
+        .insert({
+          module_id: moduleId,
+          lesson_id: lessonId,
+          comment,
+          created_at: new Date().toISOString()
+        });
+      return error ? { success: false, offline: false } : { success: true, offline: false };
+    } catch (e) {
+      return { success: false, offline: true };
+    }
+  },
+
+  getFeedback: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('lesson_feedback')
+        .select('*')
+        .order('created_at', { ascending: false });
+      return error ? [] : data;
+    } catch (e) {
+      return [];
+    }
   }
 };

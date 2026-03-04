@@ -18,7 +18,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Module" component={ModuleScreen} options={{ title: 'Module' }} />
         <Stack.Screen name="Lesson" component={LessonScreen} options={{ title: 'Lesson' }} />
         <Stack.Screen name="AdminLogin" component={AdminLoginScreen} options={{ title: 'Admin Login' }} />
-        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ title: 'Admin Dashboard' }} />
+        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ title: 'Admin Dashboard', headerLeft: () => null, gestureEnabled: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

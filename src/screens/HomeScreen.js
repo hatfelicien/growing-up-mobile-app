@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
+import { offlineQueue } from '../services/offlineQueue';
 
 export default function HomeScreen({ navigation }) {
   const [modules, setModules] = useState([]);
@@ -9,6 +10,7 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     loadData();
+    offlineQueue.sync();
   }, []);
 
   const loadData = async () => {

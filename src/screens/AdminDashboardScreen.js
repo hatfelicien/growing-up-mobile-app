@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
 
@@ -7,6 +7,7 @@ export default function AdminDashboardScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [stats, setStats] = useState(null);
   const [modules, setModules] = useState([]);
+  const [feedback, setFeedback] = useState([]);
   const [newLesson, setNewLesson] = useState({ title: '', videoId: '', content: '' });
   const [selectedModuleId, setSelectedModuleId] = useState('');
   const [newModule, setNewModule] = useState({ title: '', description: '', icon: 'Sparkles', color: 'bg-purple-100' });
@@ -20,6 +21,8 @@ export default function AdminDashboardScreen({ navigation }) {
     setStats(s);
     const m = await api.syncContent();
     setModules(m);
+    const f = await api.getFeedback();
+    setFeedback(f);
     if (m.length > 0 && !selectedModuleId) setSelectedModuleId(m[0].id);
   };
 
@@ -75,6 +78,13 @@ export default function AdminDashboardScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Admin Dashboard</Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={() => navigation.replace('AdminLogin')}>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.tabs}>
         <TouchableOpacity style={[styles.tab, activeTab === 'dashboard' && styles.activeTab]} onPress={() => setActiveTab('dashboard')}>
           <Text style={[styles.tabText, activeTab === 'dashboard' && styles.activeTabText]}>Dashboard</Text>
@@ -85,9 +95,17 @@ export default function AdminDashboardScreen({ navigation }) {
         <TouchableOpacity style={[styles.tab, activeTab === 'modules' && styles.activeTab]} onPress={() => setActiveTab('modules')}>
           <Text style={[styles.tabText, activeTab === 'modules' && styles.activeTabText]}>Modules</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={[styles.tab, activeTab === 'feedback' && styles.activeTab]} onPress={() => setActiveTab('feedback')}>
+          <Text style={[styles.tabText, activeTab === 'feedback' && styles.activeTabText]}>Feedback</Text>
+        </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
         {activeTab === 'dashboard' && (
           <View>
             <Text style={styles.title}>Dashboard Overview</Text>
@@ -171,13 +189,42 @@ export default function AdminDashboardScreen({ navigation }) {
             ))}
           </View>
         )}
-      </ScrollView>
+
+        {activeTab === 'feedback' && (
+          <View>
+            <Text style={styles.title}>User Feedback</Text>
+            {feedback.length === 0 ? (
+              <Text style={styles.noFeedback}>No feedback yet</Text>
+            ) : (
+              feedback.map((item) => {
+                const module = modules.find(m => m.id === item.module_id);
+                const lesson = module?.lessons?.find(l => l.id === item.lesson_id);
+                return (
+                  <View key={item.id} style={styles.feedbackCard}>
+                    <View style={styles.feedbackHeader}>
+                      <Text style={styles.feedbackModule}>Module: {module?.title || item.module_id}</Text>
+                      <Text style={styles.feedbackDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
+                    </View>
+                    <Text style={styles.feedbackLesson}>Lesson: {lesson?.title || item.lesson_id}</Text>
+                    <Text style={styles.feedbackComment}>{item.comment}</Text>
+                  </View>
+                );
+              })
+            )}
+          </View>
+        )}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: colors.primaryDark },
+  logoutButton: { backgroundColor: colors.error, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  logoutText: { color: colors.textInverse, fontSize: 14, fontWeight: '600' },
   tabs: { flexDirection: 'row', backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
   tab: { flex: 1, padding: 16, alignItems: 'center' },
   activeTab: { borderBottomWidth: 2, borderBottomColor: colors.primary },
@@ -207,4 +254,11 @@ const styles = StyleSheet.create({
   moduleCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.surface, padding: 16, borderRadius: 12, marginBottom: 12 },
   moduleCardTitle: { fontSize: 16, fontWeight: '600', color: colors.textMain },
   moduleCardSubtitle: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
+  feedbackCard: { backgroundColor: colors.surface, padding: 16, borderRadius: 12, marginBottom: 12 },
+  feedbackHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  feedbackModule: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  feedbackDate: { fontSize: 12, color: colors.textMuted },
+  feedbackLesson: { fontSize: 13, color: colors.textMuted, marginBottom: 8 },
+  feedbackComment: { fontSize: 15, color: colors.textMain, lineHeight: 22 },
+  noFeedback: { fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 20 },
 });

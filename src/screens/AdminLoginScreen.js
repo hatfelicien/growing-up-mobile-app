@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
 
@@ -17,28 +17,41 @@ export default function AdminLoginScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.iconContainer}>
-        <Text style={styles.icon}>🔐</Text>
-      </View>
-      <Text style={styles.title}>Admin Portal</Text>
-      <Text style={styles.subtitle}>Sign in to manage content</Text>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.content}>
+          <View style={styles.iconContainer}>
+            <Text style={styles.icon}>🔐</Text>
+          </View>
+          <Text style={styles.title}>Admin Portal</Text>
+          <Text style={styles.subtitle}>Sign in to manage content</Text>
 
-      <View style={styles.form}>
-        <Text style={styles.label}>Username</Text>
-        <TextInput style={styles.input} value={username} onChangeText={setUsername} autoCapitalize="none" />
-        <Text style={styles.label}>Password</Text>
-        <TextInput style={styles.input} value={password} onChangeText={setPassword} secureTextEntry />
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Sign In</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <View style={styles.form}>
+            <Text style={styles.label}>Username</Text>
+            <TextInput style={styles.input} value={username} onChangeText={setUsername} autoCapitalize="none" />
+            <Text style={styles.label}>Password</Text>
+            <TextInput style={styles.input} value={password} onChangeText={setPassword} secureTextEntry />
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', padding: 20, alignItems: 'center' },
+  container: { flex: 1, backgroundColor: colors.background },
+  scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+  content: { alignItems: 'center' },
   iconContainer: { width: 60, height: 60, backgroundColor: colors.primary, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
   icon: { fontSize: 32 },
   title: { fontSize: 28, fontWeight: '700', color: colors.primaryDark, marginBottom: 8 },
