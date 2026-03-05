@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "GrowingUpExpo",
-    "slug": "GrowingUpExpo",
+    "name": "Growing Up",
+    "slug": "growing-up-expo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,7 +12,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.growingup.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,10 +22,17 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "package": "com.growingup.app",
+      "versionCode": 1,
       "usesCleartextTraffic": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
     }
   }
 }
