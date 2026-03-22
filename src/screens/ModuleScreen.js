@@ -12,8 +12,10 @@ export default function ModuleScreen({ route, navigation }) {
   }, []);
 
   const loadModule = async () => {
-    const modules = await api.getModules();
-    const found = modules.find(m => String(m.id) === String(moduleId));
+    // Always sync fresh data so quiz column is included
+    const fresh = await api.syncContent();
+    const list = fresh || await api.getModules();
+    const found = list.find(m => String(m.id) === String(moduleId));
     setModule(found);
   };
 
@@ -42,15 +44,23 @@ export default function ModuleScreen({ route, navigation }) {
         ))}
       </View>
 
-      {module.quiz?.length > 0 && (
+      {module.quiz?.length > 0 ? (
         <TouchableOpacity style={styles.quizButton} onPress={() => navigation.navigate('Quiz', { moduleId })}>
           <Text style={styles.quizButtonIcon}>📝</Text>
           <View style={styles.quizButtonContent}>
             <Text style={styles.quizButtonTitle}>Take the Quiz</Text>
-            <Text style={styles.quizButtonSub}>{module.quiz.length} questions</Text>
+            <Text style={styles.quizButtonSub}>{module.quiz.length} question{module.quiz.length !== 1 ? 's' : ''}</Text>
           </View>
           <Text style={styles.arrow}>›</Text>
         </TouchableOpacity>
+      ) : (
+        <View style={styles.quizButtonDisabled}>
+          <Text style={styles.quizButtonIcon}>📝</Text>
+          <View style={styles.quizButtonContent}>
+            <Text style={styles.quizButtonTitleDisabled}>Quiz Coming Soon</Text>
+            <Text style={styles.quizButtonSubDisabled}>No questions added yet</Text>
+          </View>
+        </View>
       )}
     </ScrollView>
   );
@@ -71,8 +81,11 @@ const styles = StyleSheet.create({
   cardSubtitle: { fontSize: 14, color: colors.textMuted },
   arrow: { fontSize: 24, color: colors.primaryLight },
   quizButton: { marginHorizontal: 20, marginBottom: 30, backgroundColor: colors.primary, borderRadius: 14, padding: 18, flexDirection: 'row', alignItems: 'center' },
+  quizButtonDisabled: { marginHorizontal: 20, marginBottom: 30, backgroundColor: colors.surfaceMuted, borderRadius: 14, padding: 18, flexDirection: 'row', alignItems: 'center' },
   quizButtonIcon: { fontSize: 28, marginRight: 14 },
   quizButtonContent: { flex: 1 },
   quizButtonTitle: { fontSize: 18, fontWeight: '700', color: colors.textInverse },
+  quizButtonTitleDisabled: { fontSize: 18, fontWeight: '700', color: colors.textMuted },
   quizButtonSub: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  quizButtonSubDisabled: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
 });
