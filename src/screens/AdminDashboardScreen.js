@@ -97,6 +97,22 @@ export default function AdminDashboardScreen({ navigation }) {
     }
   };
 
+  const handleSeedDummy = async () => {
+    if (!quizModuleId) return Alert.alert('Error', 'Select a module first');
+    Alert.alert('Seed Dummy Questions', 'This will replace the current quiz with 5 sample questions. Continue?', [
+      { text: 'Cancel' },
+      { text: 'Seed', onPress: async () => {
+        const result = await api.seedDummyQuiz(quizModuleId);
+        if (result.success) {
+          Alert.alert('Done', '5 dummy questions added!');
+          refreshData();
+        } else {
+          Alert.alert('Error', 'Failed to seed questions');
+        }
+      }}
+    ]);
+  };
+
   const handleDeleteQuestion = async (moduleId, questionId) => {
     Alert.alert('Confirm', 'Delete this question?', [
       { text: 'Cancel' },
@@ -301,6 +317,9 @@ export default function AdminDashboardScreen({ navigation }) {
               />
               <TouchableOpacity style={styles.button} onPress={handleAddQuestion}>
                 <Text style={styles.buttonText}>Add Question</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.button, { backgroundColor: colors.secondary, marginTop: 8 }]} onPress={handleSeedDummy}>
+                <Text style={styles.buttonText}>🌱 Seed 5 Dummy Questions</Text>
               </TouchableOpacity>
             </View>
 
