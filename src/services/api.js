@@ -134,6 +134,41 @@ export const api = {
     return error ? [] : data;
   },
 
+  addQuizQuestion: async (moduleId, question) => {
+    const { data: module } = await supabase
+      .from('modules')
+      .select('quiz')
+      .eq('id', moduleId)
+      .single();
+
+    const quiz = module?.quiz || [];
+    quiz.push(question);
+
+    const { error } = await supabase
+      .from('modules')
+      .update({ quiz })
+      .eq('id', moduleId);
+
+    return error ? { success: false } : { success: true };
+  },
+
+  deleteQuizQuestion: async (moduleId, questionId) => {
+    const { data: module } = await supabase
+      .from('modules')
+      .select('quiz')
+      .eq('id', moduleId)
+      .single();
+
+    const quiz = (module?.quiz || []).filter(q => q.id !== questionId);
+
+    const { error } = await supabase
+      .from('modules')
+      .update({ quiz })
+      .eq('id', moduleId);
+
+    return error ? { success: false } : { success: true };
+  },
+
   submitFeedback: async (moduleId, lessonId, comment) => {
     try {
       const { error } = await supabase

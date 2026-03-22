@@ -11,6 +11,8 @@ export default function AdminDashboardScreen({ navigation }) {
   const [newLesson, setNewLesson] = useState({ title: '', videoId: '', content: '' });
   const [selectedModuleId, setSelectedModuleId] = useState('');
   const [newModule, setNewModule] = useState({ title: '', description: '', icon: 'Sparkles', color: 'bg-purple-100' });
+  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctIndex: 0, explanation: '' });
+  const [quizModuleId, setQuizModuleId] = useState('');
 
   useEffect(() => {
     refreshData();
@@ -23,7 +25,10 @@ export default function AdminDashboardScreen({ navigation }) {
     setModules(m);
     const f = await api.getFeedback();
     setFeedback(f);
-    if (m.length > 0 && !selectedModuleId) setSelectedModuleId(m[0].id);
+    if (m.length > 0 && !selectedModuleId) {
+      setSelectedModuleId(m[0].id);
+      setQuizModuleId(m[0].id);
+    }
   };
 
   const handleAddLesson = async () => {
@@ -76,6 +81,32 @@ export default function AdminDashboardScreen({ navigation }) {
     ]);
   };
 
+  const handleAddQuestion = async () => {
+    if (!quizModuleId) return Alert.alert('Error', 'Select a module');
+    if (!newQuestion.question.trim()) return Alert.alert('Error', 'Enter a question');
+    if (newQuestion.options.some(o => !o.trim())) return Alert.alert('Error', 'Fill in all 4 options');
+    const question = {
+      ...newQuestion,
+      id: Date.now().toString(),
+    };
+    const result = await api.addQuizQuestion(quizModuleId, question);
+    if (result.success) {
+      Alert.alert('Success', 'Question Added!');
+      setNewQuestion({ question: '', options: ['', '', '', ''], correctIndex: 0, explanation: '' });
+      refreshData();
+    }
+  };
+
+  const handleDeleteQuestion = async (moduleId, questionId) => {
+    Alert.alert('Confirm', 'Delete this question?', [
+      { text: 'Cancel' },
+      { text: 'Delete', onPress: async () => {
+        await api.deleteQuizQuestion(moduleId, questionId);
+        refreshData();
+      }}
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -97,6 +128,9 @@ export default function AdminDashboardScreen({ navigation }) {
         </TouchableOpacity>
         <TouchableOpacity style={[styles.tab, activeTab === 'feedback' && styles.activeTab]} onPress={() => setActiveTab('feedback')}>
           <Text style={[styles.tabText, activeTab === 'feedback' && styles.activeTabText]}>Feedback</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tab, activeTab === 'quiz' && styles.activeTab]} onPress={() => setActiveTab('quiz')}>
+          <Text style={[styles.tabText, activeTab === 'quiz' && styles.activeTabText]}>Quiz</Text>
         </TouchableOpacity>
       </View>
 
@@ -213,6 +247,81 @@ export default function AdminDashboardScreen({ navigation }) {
             )}
           </View>
         )}
+
+        {activeTab === 'quiz' && (
+          <View>
+            <Text style={styles.title}>Add Quiz Question</Text>
+            <View style={styles.form}>
+              <Text style={styles.label}>Select Module</Text>
+              <View style={styles.picker}>
+                {modules.map(m => (
+                  <TouchableOpacity key={m.id} style={[styles.pickerItem, quizModuleId === m.id && styles.pickerItemActive]} onPress={() => setQuizModuleId(m.id)}>
+                    <Text style={styles.pickerText}>{m.title}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={styles.label}>Question</Text>
+              <TextInput
+                style={[styles.input, styles.textarea]}
+                multiline
+                numberOfLines={3}
+                value={newQuestion.question}
+                onChangeText={t => setNewQuestion({ ...newQuestion, question: t })}
+                placeholder="Enter your question here..."
+              />
+              {['A', 'B', 'C', 'D'].map((letter, i) => (
+                <View key={i}>
+                  <Text style={styles.label}>Option {letter}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={newQuestion.options[i]}
+                    onChangeText={t => {
+                      const opts = [...newQuestion.options];
+                      opts[i] = t;
+                      setNewQuestion({ ...newQuestion, options: opts });
+                    }}
+                    placeholder={`Option ${letter}`}
+                  />
+                </View>
+              ))}
+              <Text style={styles.label}>Correct Answer</Text>
+              <View style={styles.picker}>
+                {['A', 'B', 'C', 'D'].map((letter, i) => (
+                  <TouchableOpacity key={i} style={[styles.pickerItem, newQuestion.correctIndex === i && styles.pickerItemActive]} onPress={() => setNewQuestion({ ...newQuestion, correctIndex: i })}>
+                    <Text style={styles.pickerText}>Option {letter}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={styles.label}>Explanation (optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={newQuestion.explanation}
+                onChangeText={t => setNewQuestion({ ...newQuestion, explanation: t })}
+                placeholder="Why is this the correct answer?"
+              />
+              <TouchableOpacity style={styles.button} onPress={handleAddQuestion}>
+                <Text style={styles.buttonText}>Add Question</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.title}>Existing Questions</Text>
+            {modules.map(module => (
+              module.quiz?.length > 0 && (
+                <View key={module.id} style={styles.moduleSection}>
+                  <Text style={styles.moduleTitle}>{module.title} ({module.quiz.length} questions)</Text>
+                  {module.quiz.map((q, i) => (
+                    <View key={q.id} style={styles.questionItem}>
+                      <Text style={styles.questionText} numberOfLines={2}>{i + 1}. {q.question}</Text>
+                      <TouchableOpacity onPress={() => handleDeleteQuestion(module.id, q.id)}>
+                        <Text style={styles.deleteText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )
+            ))}
+          </View>
+        )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -261,4 +370,6 @@ const styles = StyleSheet.create({
   feedbackLesson: { fontSize: 13, color: colors.textMuted, marginBottom: 8 },
   feedbackComment: { fontSize: 15, color: colors.textMain, lineHeight: 22 },
   noFeedback: { fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 20 },
+  questionItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: colors.surface, borderRadius: 8, marginBottom: 8 },
+  questionText: { fontSize: 14, color: colors.textMain, flex: 1, marginRight: 8 },
 });

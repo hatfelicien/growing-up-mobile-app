@@ -31,8 +31,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "your-project-id-here"
+        "projectId": "a65daf96-47fe-46df-85f0-530b2857019b"
       }
-    }
+    },
+    "owner": "hatbero"
   }
 }

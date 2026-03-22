@@ -37,9 +37,21 @@ export default function ModuleScreen({ route, navigation }) {
               <Text style={styles.cardTitle}>{lesson.title}</Text>
               <Text style={styles.cardSubtitle}>{lesson.duration}</Text>
             </View>
+            <Text style={styles.arrow}>›</Text>
           </TouchableOpacity>
         ))}
       </View>
+
+      {module.quiz?.length > 0 && (
+        <TouchableOpacity style={styles.quizButton} onPress={() => navigation.navigate('Quiz', { moduleId })}>
+          <Text style={styles.quizButtonIcon}>📝</Text>
+          <View style={styles.quizButtonContent}>
+            <Text style={styles.quizButtonTitle}>Take the Quiz</Text>
+            <Text style={styles.quizButtonSub}>{module.quiz.length} questions</Text>
+          </View>
+          <Text style={styles.arrow}>›</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }
@@ -57,4 +69,10 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   cardTitle: { fontSize: 18, fontWeight: '600', color: colors.textMain, marginBottom: 4 },
   cardSubtitle: { fontSize: 14, color: colors.textMuted },
+  arrow: { fontSize: 24, color: colors.primaryLight },
+  quizButton: { marginHorizontal: 20, marginBottom: 30, backgroundColor: colors.primary, borderRadius: 14, padding: 18, flexDirection: 'row', alignItems: 'center' },
+  quizButtonIcon: { fontSize: 28, marginRight: 14 },
+  quizButtonContent: { flex: 1 },
+  quizButtonTitle: { fontSize: 18, fontWeight: '700', color: colors.textInverse },
+  quizButtonSub: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 });
